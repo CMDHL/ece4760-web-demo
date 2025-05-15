@@ -4,46 +4,110 @@
   <meta charset="UTF-8">
   <title>Pico Web Game</title>
   <style>
-    html, body {
-      background: black;
+    html,
+    body {
       margin: 0;
-      overflow: hidden;
+      padding: 0;
+      background: black;
+      width: 100%;
+      height: 100%;
     }
+  
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  
     canvas {
-      display: block;
-      margin: 0 auto;
-      background: #222;
+      background: black;
+      image-rendering: pixelated;
+      width: 640px;
+      height: 480px;
     }
-  </style>
+  </style>  
 </head>
 <body>
   <canvas id="canvas" width="640" height="480"></canvas>
-  <script src="game.js"></script>
-  <script>
-    // Emscripten will use this canvas
-    var Module = {
-      canvas: document.getElementById('canvas'),
-      fillRect: function(x, y, w, h, color) {
-        const ctx = Module.canvas.getContext('2d');
-        ctx.fillStyle = getColor(color);
-        ctx.fillRect(x, Module.canvas.height - y - h, w, h); // flip y-axis
-      },
-      drawRect: function(x, y, w, h, color) {
-        const ctx = Module.canvas.getContext('2d');
-        ctx.strokeStyle = getColor(color);
-        ctx.strokeRect(x, Module.canvas.height - y - h, w, h);
-      }
+<script>
+  const keyMapP1 = {
+      65: 4,  // A = LEFT
+      68: 6,  // D = RIGHT
+      87: 2,  // W = UP
+      83: 5,  // S = DOWN
+      70: 1,  // F = ATK1
+      82: 3,  // R = ATK2
+      81: 8,  // Q = Change Head
+      69: 9,  // E = Change Clothes
+      32: 7,  // Space = Pause
+      27: 0   // ESC = Back
     };
 
-    function getColor(c) {
-      switch(c) {
-        case 'b': return '#000'; // black
-        case 'w': return '#fff'; // white
-        case 'r': return '#f44'; // red
-        case 'y': return '#ff0'; // yellow
-        default:  return '#0ff'; // fallback
+    const keyMapP2 = {
+        75: 4,  // K = LEFT
+        186: 6, // ; / : = RIGHT
+        79: 2,  // O = UP
+        76: 5,  // L = DOWN
+        74: 1,  // J = ATK1
+        85: 3,  // U = ATK2
+        73: 8,  // I = Change Head
+        80: 9,  // P = Change Clothes
+        32: 7,  // Space = Pause
+        8: 0   // Backspace = ESC
+      };
+
+    let keyState = {
+        p1Held: new Set(),
+        p2Held: new Set()
+      };
+    const keypadPriority = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 11]; // scan order
+
+    document.addEventListener('keydown', (event) => {
+        if (event.repeat) return;
+        if (keyMapP1.hasOwnProperty(event.keyCode)) keyState.p1Held.add(keyMapP1[event.keyCode]);
+        if (keyMapP2.hasOwnProperty(event.keyCode)) keyState.p2Held.add(keyMapP2[event.keyCode]);
+      });
+
+      document.addEventListener('keyup', (event) => {
+        if (keyMapP1.hasOwnProperty(event.keyCode)) keyState.p1Held.delete(keyMapP1[event.keyCode]);
+        if (keyMapP2.hasOwnProperty(event.keyCode)) keyState.p2Held.delete(keyMapP2[event.keyCode]);
+      });
+
+  var Module = {
+    canvas: document.getElementById('canvas'),
+    keypadPriority: keypadPriority,
+    keyState: keyState,
+    fillRect: function(x, y, w, h, color) {
+      const ctx = Module.canvas.getContext('2d');
+      ctx.fillStyle = getColor(color);
+      ctx.fillRect(x, y, w, h);
+    },
+    drawRect: function(x, y, w, h, color) {
+      const ctx = Module.canvas.getContext('2d');
+      ctx.strokeStyle = getColor(color);
+      ctx.strokeRect(x, y, w, h);
+    },
+    onRuntimeInitialized: function() {
+      function frame() {
+        Module.ccall('ui_state_machine', null, [], []);
+        setTimeout(frame, 100); // 10 FPS
       }
+      frame();
     }
-  </script>
+  };
+
+  function getColor(c) {
+    switch (c) {
+      case 0: return '#000'; // black
+      case 1: return '#fff'; // white
+      case 2: return '#f44'; // red
+      case 3: return '#ff0'; // yellow
+      default: return '#0ff'; // fallback (cyan)
+    }
+  }
+
+</script>
+<script src="game.js"></script>
+
 </body>
 </html>

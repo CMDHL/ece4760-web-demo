@@ -33,6 +33,22 @@ void drawRect(int x, int y, int w, int h, int color) {
   draw_rect(x, y, w, h, color);
 }
 
+EM_JS(int, get_key_js, (int p1), {
+  const held = p1 ? Module.keyState.p1Held : Module.keyState.p2Held;
+  for (let i = 0; i < Module.keypadPriority.length; i++)
+  {
+    const code = Module.keypadPriority[i];
+    if (held.has(code))
+      return code;
+  }
+  return -1; // nothing pressed
+});
+
+short getKey(bool p1)
+{
+  return get_key_js(p1);
+}
+
 //=== ===
 // Define constants
 #define SCREEN_WIDTH 640
@@ -60,7 +76,10 @@ short effect_len = 1;
 short effect_id = -1;
 short count_1 = 0;
 
-short hit_x=-1, hit_y=-1, hit_w=0, hit_h=0; //for drawing attack hitboxes
+short p1_key_prev = -1;
+short p2_key_prev = -1;
+
+// short hit_x=-1, hit_y=-1, hit_w=0, hit_h=0; //for drawing attack hitboxes
 
 static void trigger_effect(unsigned int *freq, short len)
 {
@@ -75,8 +94,11 @@ static uint32_t elapsed_time_sec = 0;
 
 static short tracked_key;
 
-char WHITE='w', BLACK='b', RED = 'r', YELLOW = 'y';
-;
+#define BLACK 0
+#define WHITE 1
+#define RED   2
+#define YELLOW 3
+
 
 // Possible Player States: 0 = Idle, 1 = Attack, 2 = Hurt, 3 = Die
 
@@ -298,43 +320,12 @@ void drawTitleScreen(bool ready)
 
 void drawPauseScreen()
 {
-  // drawTitleScreen(true);
-  // drawHealthBars(WHITE);
-  // drawShields(WHITE);
   drawSprite(paused, 437, false,SCREEN_MIDLINE_X,SCREEN_HEIGHT,BLACK);
   drawSprite(key_out, 48, false,SCREEN_MIDLINE_X,SCREEN_HEIGHT,BLACK);
   drawSprite(key_out, 48, true,SCREEN_MIDLINE_X,SCREEN_HEIGHT,BLACK);
   drawSprite(key_in, 140, false,SCREEN_MIDLINE_X,SCREEN_HEIGHT,WHITE);
   drawSprite(key_in, 140, true,SCREEN_MIDLINE_X,SCREEN_HEIGHT,WHITE);
 }
-
-void drawBodyHitbox(short h, short p, char color)
-{
-  short h1xL = players[p].x - hitboxes[h].x_off;
-  short h1xR = players[p].x + hitboxes[h].x_off - hitboxes[h].w;
-
-  short h1y1 = players[p].y - hitboxes[h].y_off;
-  short h1y2 = h1y1 + hitboxes[h].h;
-
-  short h1x1;
-  short h1x2;
-
-  if (!players[p].flip)
-  {
-    h1x1 = h1xL;
-    h1x2 = h1xL + hitboxes[h].w;
-  }
-  else
-  {
-    h1x1 = h1xR;
-    h1x2 = h1xR + hitboxes[h].w;
-  }
-
-  drawRect(h1x1, h1y1, h1x2-h1x1, h1y2-h1y1, color);
-  drawRect(h1x1+1, h1y1+1, h1x2-h1x1-2, h1y2-h1y1-2, color);
-  drawRect(h1x1+2, h1y1+2, h1x2-h1x1-4, h1y2-h1y1-4, color);
-}
-
 
 bool isOverlapping(short h1, short h2, short attacker)
 {
@@ -381,36 +372,11 @@ bool isOverlapping(short h1, short h2, short attacker)
     h2x2 = h2xR + hitboxes[h2].w;
   }
 
-  // return ((h1x>h2x && h1x<h2x+hitboxes[h2].w)||(h1x+hitboxes[h1].w>h2x && h1x<h2x+hitboxes[h2].w)) && ((h1y<h2y && h1y>h2y-hitboxes[h2].h)||(h1y-hitboxes[h1].h<h2y && h1y-hitboxes[h1].h>h2y-hitboxes[h2].h));
   bool x_overlap = (h1x1 >= h2x1 && h1x1 <= h2x2) || (h1x2 >= h2x1 && h1x2 <= h2x2) || (h2x1 >= h1x1 && h2x1 <= h1x2) || (h2x2 >= h1x1 && h2x2 <= h1x2);
   bool y_overlap = (h1y1 >= h2y1 && h1y1 <= h2y2) || (h1y2 >= h2y1 && h1y2 <= h2y2) || (h2y1 >= h1y1 && h2y1 <= h1y2) || (h2y2 >= h1y1 && h2y2 <= h1y2);
   bool r = x_overlap && y_overlap;
 
-  if(r && h1!=0 && h1!=5)
-  {
-    hit_x=h1x1;
-    hit_y=h1y1;
-    hit_w=h1x2-h1x1;
-    hit_h=h1y2-h1y1;
-    // drawRect(h1x1,h1y1,h1x2-h1x1,h1y2-h1y1, YELLOW);
-    // drawRect(h1x1+1,h1y1+1,h1x2-h1x1-2,h1y2-h1y1-2, YELLOW);
-    // drawRect(h1x1+2,h1y1+2,h1x2-h1x1-4,h1y2-h1y1-4, YELLOW);
-  }
-
-  // if(x_overlap)
-  //   printf("x_overlap\n");
-  // if(y_overlap)
-  //   printf("y_overlap:%d, %d, %d, %d\n", h1y1, h1y2, h2y1, h2y2);
-  // else
-  //   printf("missed y:%d, %d, %d, %d\n", h1y1, h1y2, h2y1, h2y2);
-  // if(r)
-  //   printf("overlap\n");
   return r;
-}
-
-short getKey(bool p1)
-{
-  return 0;
 }
 
 void handle_input_floating(short i)
@@ -509,12 +475,6 @@ void handle_input(short i)
 
 void game_step()
 {
-  drawBodyHitbox(players[0].body,0,WHITE);//erase
-  drawBodyHitbox(players[1].body,1,WHITE);//erase
-  drawRect(hit_x, hit_y, hit_w, hit_h, WHITE); //current hit box
-  drawRect(hit_x+1, hit_y+1, hit_w-2, hit_h-2, WHITE); //make it thicker
-  drawRect(hit_x+2, hit_y+2, hit_w-4, hit_h-4, WHITE); 
-
   drawHealthBars(BLACK);
   drawShields(BLACK);
   // drawRect(80, 0 ,640-160, 480, BLACK);
@@ -825,9 +785,6 @@ void game_step()
   drawFrame(&players[0], BLACK); // player i, draw current frame
   drawFrame(&players[1], BLACK); // player i, draw current frame
 
-  drawBodyHitbox(players[0].body,0,RED);//draw body hitbox
-  drawBodyHitbox(players[1].body,1,RED);
-
   drawSprite(P1, 13, false, players[0].x, players[0].y, BLACK);
   drawSprite(P2, 15, false, players[1].x, players[1].y, BLACK);
   drawSprite(P1, 13, false, 264, 228, BLACK);
@@ -839,85 +796,107 @@ void game_step()
   drawLooped(clouds3_inside, 515, clouds_x, 480, WHITE);
   drawSprite(roof_decoration, 39, false, 324, 480, BLACK);
   drawSprite(roof_decoration, 39, true, 316, 480, BLACK);
-
-  drawRect(hit_x, hit_y, hit_w, hit_h, YELLOW); //current hit box
-  drawRect(hit_x+1, hit_y+1, hit_w-2, hit_h-2, YELLOW); //make it thicker
-  drawRect(hit_x+2, hit_y+2, hit_w-4, hit_h-4, YELLOW); 
 }
-// core 1
-void protothread_core1()
+// core 1 logic converted to a step function
+void ui_state_machine()
 {
-  // Variables for maintaining frame rate
-  static int begin_time;
-  static int spare_time;
-
-  short p1_key_prev = -1;
-  short p2_key_prev = -1;
-
-  while (1)
+  switch (ui_state)
   {
-    // Measure time at start of thread
-
-    // printf("%d\n",ui_state);
-
-    switch (ui_state)
+  case 0://reset & draw title screen
+  {
+    winner=-1; //intentionally separated from resetGame
+    resetGame();
+    drawTitleScreen(false);
+    ui_state = -1;
+    break;
+  }
+  case -1: //wait to draw ready screen
+  {
+    if(getKey(true)>0 || getKey(false)>0) //press any key (except ESC) to enter ready screen
     {
-    case 0://reset & draw title screen
-    {
-      winner=-1; //intentionally separated from resetGame
-      resetGame();
-      drawTitleScreen(false);
-      ui_state = -1;
-      break;
+      drawTitleScreen(true);
+      ui_state = -2; 
     }
-    case -1: //wait to draw ready screen
-    {
-      if(getKey(true)>0 || getKey(false)>0) //press any key (except ESC) to enter ready screen
-      {
-        drawTitleScreen(true);
-        ui_state = -2; 
-      }
-      break;
-    }
-    case -2: //in ready screen, display the keys being pressed
-    {
-      short p1_offset = 72;
-      if(p1_key_prev>=0)
-        drawSprite(key_sprites[p1_key_prev].p, key_sprites[p1_key_prev].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, BLACK);
-      if(p2_key_prev>=0)
-        drawSprite(key_sprites[p2_key_prev].p, key_sprites[p2_key_prev].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, BLACK);
-        
-      short p1_key = getKey(true);
-      short p2_key = getKey(false);
+    break;
+  }
+  case -2: //in ready screen, display the keys being pressed
+  {
+    short p1_offset = 72;
+    if(p1_key_prev>=0)
+      drawSprite(key_sprites[p1_key_prev].p, key_sprites[p1_key_prev].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, BLACK);
+    if(p2_key_prev>=0)
+      drawSprite(key_sprites[p2_key_prev].p, key_sprites[p2_key_prev].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, BLACK);
+      
+    short p1_key = getKey(true);
+    short p2_key = getKey(false);
 
-      if(p1_key>=0)
+    if(p1_key>=0)
+    {
+      drawSprite(key_sprites[p1_key].p, key_sprites[p1_key].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, WHITE);
+      if (p1_key!=p1_key_prev)
       {
-        drawSprite(key_sprites[p1_key].p, key_sprites[p1_key].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, WHITE);
-        if (p1_key!=p1_key_prev)
+        trigger_effect(button_freq,1);
+        switch(p1_key)
         {
-          trigger_effect(button_freq,1);
-          switch(p1_key)
+          case 8:
+          {
+            winner=-1; // reset winner after switching character
+            if(players[0].head_anim==E)
+              players[0].head_anim=A;
+            else if (players[0].head_anim==A)
+              players[0].head_anim=Z;
+            else
+              players[0].head_anim=E;
+            drawTitleScreen(true);
+            break;
+          }
+          case 9:
+          {
+            if(players[0].body_anim==C1)
+              players[0].body_anim=C2;
+            else if (players[0].body_anim==C2)
+              players[0].body_anim=C3;
+            else
+              players[0].body_anim=C1;
+            drawTitleScreen(true);
+            break;
+          }
+          default:
+          {
+            break;
+          }
+        }
+      }
+    }
+      
+    if(p2_key>=0)
+    {
+      drawSprite(key_sprites[p2_key].p, key_sprites[p2_key].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
+      if(p2_key!=p2_key_prev)
+      {
+        trigger_effect(button_freq,1);
+        switch(p2_key)
           {
             case 8:
             {
               winner=-1; // reset winner after switching character
-              if(players[0].head_anim==E)
-                players[0].head_anim=A;
-              else if (players[0].head_anim==A)
-                players[0].head_anim=Z;
+              if(players[1].head_anim==E)
+                players[1].head_anim=A;
+              else if (players[1].head_anim==A)
+                players[1].head_anim=Z;
               else
-                players[0].head_anim=E;
+                players[1].head_anim=E;
               drawTitleScreen(true);
               break;
             }
             case 9:
             {
-              if(players[0].body_anim==C1)
-                players[0].body_anim=C2;
-              else if (players[0].body_anim==C2)
-                players[0].body_anim=C3;
+              if(players[1].body_anim==C1)
+                players[1].body_anim=C2;
+              else if (players[1].body_anim==C2)
+                players[1].body_anim=C3;
               else
-                players[0].body_anim=C1;
+                players[1].body_anim=C1;
               drawTitleScreen(true);
               break;
             }
@@ -928,118 +907,74 @@ void protothread_core1()
           }
         }
       }
-        
-      if(p2_key>=0)
-      {
-        drawSprite(key_sprites[p2_key].p, key_sprites[p2_key].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
-        if(p2_key!=p2_key_prev)
-        {
-          trigger_effect(button_freq,1);
-          switch(p2_key)
-            {
-              case 8:
-              {
-                winner=-1; // reset winner after switching character
-                if(players[1].head_anim==E)
-                  players[1].head_anim=A;
-                else if (players[1].head_anim==A)
-                  players[1].head_anim=Z;
-                else
-                  players[1].head_anim=E;
-                drawTitleScreen(true);
-                break;
-              }
-              case 9:
-              {
-                if(players[1].body_anim==C1)
-                  players[1].body_anim=C2;
-                else if (players[1].body_anim==C2)
-                  players[1].body_anim=C3;
-                else
-                  players[1].body_anim=C1;
-                drawTitleScreen(true);
-                break;
-              }
-              default:
-              {
-                break;
-              }
-            }
-          }
-        }
 
-      p1_key_prev = p1_key;
-      p2_key_prev = p2_key;
+    p1_key_prev = p1_key;
+    p2_key_prev = p2_key;
 
-      
-      if(p1_key>0 && p1_key<7 && p1_key==p2_key) //start game when two players are pressing the same key in range [1,6]
-      {
-        ui_state = 2;
-        fillRect(0, 0, 640, 480, WHITE);
-        drawSprite(rooftop, 741, false, 322, 480, BLACK);
-        drawSprite(rooftop, 741, true, 318, 480, BLACK);
-        // dma_start_channel_mask(1u << fightctrl_chan) ;
-      }
-      else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
-      {
-        ui_state=0;
-      }
-      break;
-    }
-    case 2:
-      game_step(); // game step
-      break;
-
-    case 3: //win state
-      winner = players[0].hp<=0?1:0;
-      drawTitleScreen(true);
-      resetGame();
-      ui_state = -2; //go back to ready screen (will show winner there)
-      break;
-    case 4:
-    {
-      drawPauseScreen();
-      short p1_offset = 68;
-      if(p1_key_prev>=0)
-        drawSprite(key_sprites[p1_key_prev].p, key_sprites[p1_key_prev].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, WHITE);
-      if(p2_key_prev>=0)
-        drawSprite(key_sprites[p2_key_prev].p, key_sprites[p2_key_prev].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
-        
-      short p1_key = getKey(true);
-      short p2_key = getKey(false);
-
-      if(p1_key>=0)
-        drawSprite(key_sprites[p1_key].p, key_sprites[p1_key].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, BLACK);
-      if(p2_key>=0)
-        drawSprite(key_sprites[p2_key].p, key_sprites[p2_key].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, BLACK);
-
-      p1_key_prev = p1_key;
-      p2_key_prev = p2_key;
-
-      
-      if(p1_key>0 && p1_key<7 && p1_key==p2_key) //start game when two players are pressing the same key in range [1,6]
-      {
-        ui_state = 2;
-        fillRect(0, 0, 640, 480, WHITE);
-        drawSprite(rooftop, 741, false, 322, 480, BLACK);
-        drawSprite(rooftop, 741, true, 318, 480, BLACK);
-        // dma_start_channel_mask(1u << fightctrl_chan) ;
-      }
-      else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
-      {
-        ui_state=0;
-      }
-      break;
-    }
-    default:
-      break;
-    }
-
-    // yield for necessary amount of time
     
-    // NEVER exit while
-  } // END WHILE(1)
-} // animation thread
+    if(p1_key>0 && p1_key<7 && p1_key==p2_key) //start game when two players are pressing the same key in range [1,6]
+    {
+      ui_state = 2;
+      fillRect(0, 0, 640, 480, WHITE);
+      drawSprite(rooftop, 741, false, 322, 480, BLACK);
+      drawSprite(rooftop, 741, true, 318, 480, BLACK);
+      // dma_start_channel_mask(1u << fightctrl_chan) ;
+    }
+    else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
+    {
+      ui_state=0;
+    }
+    break;
+  }
+  case 2:
+    game_step(); // game step
+    break;
+
+  case 3: //win state
+    winner = players[0].hp<=0?1:0;
+    drawTitleScreen(true);
+    resetGame();
+    ui_state = -2; //go back to ready screen (will show winner there)
+    break;
+  case 4:
+  {
+    drawPauseScreen();
+    short p1_offset = 68;
+    if(p1_key_prev>=0)
+      drawSprite(key_sprites[p1_key_prev].p, key_sprites[p1_key_prev].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, WHITE);
+    if(p2_key_prev>=0)
+      drawSprite(key_sprites[p2_key_prev].p, key_sprites[p2_key_prev].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
+      
+    short p1_key = getKey(true);
+    short p2_key = getKey(false);
+
+    if(p1_key>=0)
+      drawSprite(key_sprites[p1_key].p, key_sprites[p1_key].len, false, SCREEN_MIDLINE_X-p1_offset, SCREEN_HEIGHT, BLACK);
+    if(p2_key>=0)
+      drawSprite(key_sprites[p2_key].p, key_sprites[p2_key].len, false, SCREEN_MIDLINE_X, SCREEN_HEIGHT, BLACK);
+
+    p1_key_prev = p1_key;
+    p2_key_prev = p2_key;
+
+    
+    if(p1_key>0 && p1_key<7 && p1_key==p2_key) //start game when two players are pressing the same key in range [1,6]
+    {
+      ui_state = 2;
+      fillRect(0, 0, 640, 480, WHITE);
+      drawSprite(rooftop, 741, false, 322, 480, BLACK);
+      drawSprite(rooftop, 741, true, 318, 480, BLACK);
+      // dma_start_channel_mask(1u << fightctrl_chan) ;
+    }
+    else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
+    {
+      ui_state=0;
+    }
+    break;
+  }
+  default:
+    break;
+  }
+}
 
 // ========================================
 // === main

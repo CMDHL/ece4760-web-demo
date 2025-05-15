@@ -2120,6 +2120,7 @@ function checkIncomingModuleAPI() {
 }
 function fill_rect(x,y,w,h,color) { Module.fillRect(x, y, w, h, color); }
 function draw_rect(x,y,w,h,color) { Module.drawRect(x, y, w, h, color); }
+function get_key_js(p1) { const held = p1 ? Module.keyState.p1Held : Module.keyState.p2Held; for (let i = 0; i < Module.keypadPriority.length; i++) { const code = Module.keypadPriority[i]; if (held.has(code)) return code; } return -1; }
 var wasmImports = {
   /** @export */
   _abort_js: __abort_js,
@@ -2132,11 +2133,14 @@ var wasmImports = {
   /** @export */
   fd_write: _fd_write,
   /** @export */
-  fill_rect
+  fill_rect,
+  /** @export */
+  get_key_js
 };
 var wasmExports;
 createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
+var _ui_state_machine = Module['_ui_state_machine'] = createExportWrapper('ui_state_machine', 0);
 var _main = Module['_main'] = createExportWrapper('main', 2);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);

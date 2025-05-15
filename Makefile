@@ -7,7 +7,7 @@ all: build
 build:
 	emcc animation.c -o game.js \
 		-sEXPORTED_FUNCTIONS=_main,_ui_state_machine \
-		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPU32 \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPU32,HEAPU16
 		-sALLOW_MEMORY_GROWTH=1 \
 		-sASYNCIFY
 

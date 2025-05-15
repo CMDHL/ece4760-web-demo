@@ -58,6 +58,24 @@ EM_JS(void, trigger_effect, (unsigned int *freq, short len), {
   triggerEffect(freqs);
 });
 
+EM_JS(void, trigger_dma_effect, (const uint16_t *samples, int len), {
+  const u16 = new Uint16Array(Module.HEAPU16.buffer, samples, len);
+
+  const f32 = new Float32Array(len);
+  for (let i = 0; i < len; i++)
+  {
+    f32[i] = ((u16[i] & 0x0FFF) - 2048) / 2048; // Convert 12-bit DAC to [-1, 1]
+  }
+
+  const buffer = audioCtx.createBuffer(1, f32.length, 44100);
+  buffer.copyToChannel(f32, 0);
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+});
+
 //=== ===
 // Define constants
 #define SCREEN_WIDTH 640
@@ -557,6 +575,8 @@ void game_step()
           if (players[!i].shield > 0 && players[!i].state == 3)
           {
             // dma_start_channel_mask(1u << shieldctrl_chan) ;
+            trigger_dma_effect(shield_sound, shield_sound_length);
+
             players[!i].shield--;
             if (players[i].shield < 3)
               players[i].shield++;
@@ -567,6 +587,7 @@ void game_step()
           else
           {
             // dma_start_channel_mask(1u << hitctrl_chan) ;
+            trigger_dma_effect(hit_sound, hit_sound_length);
 
             players[!i].frame = 0;
             players[!i].state = 4; // hurt state
@@ -576,6 +597,7 @@ void game_step()
         }
         else{
           // dma_start_channel_mask(1u << whooshctrl_chan) ;
+          trigger_dma_effect(whoosh_sound, whoosh_sound_length);
         }
       }
 
@@ -601,6 +623,8 @@ void game_step()
           if (players[!i].shield > 0 && players[!i].state == 8)
           {
             // dma_start_channel_mask(1u << shieldctrl_chan) ;
+            trigger_dma_effect(shield_sound, shield_sound_length);
+
             players[!i].shield--;
             if (players[i].shield < 3)
               players[i].shield++;
@@ -611,6 +635,7 @@ void game_step()
           else
           {
             // dma_start_channel_mask(1u << hitctrl_chan);
+            trigger_dma_effect(hit_sound, hit_sound_length);
 
             players[!i].frame = 0;
             players[!i].state = 4; // hurt state
@@ -620,6 +645,7 @@ void game_step()
         }
         else{
           // dma_start_channel_mask(1u << whooshctrl_chan) ;
+          trigger_dma_effect(whoosh_sound, whoosh_sound_length);
         }
       }
       break;
@@ -638,6 +664,8 @@ void game_step()
         if (isOverlapping(7, players[!i].body, i))
         {
           // dma_start_channel_mask(1u << hitctrl_chan) ;
+          trigger_dma_effect(hit_sound, hit_sound_length);
+
           players[!i].frame = 0;
           players[!i].state = 4; // hurt state
           players[!i].hp -= 20;  // hurt state
@@ -645,7 +673,7 @@ void game_step()
         }
         else{
           // dma_start_channel_mask(1u << whooshctrl_chan) ;
-
+          trigger_dma_effect(whoosh_sound, whoosh_sound_length);
         }
       }
       break;
@@ -672,6 +700,7 @@ void game_step()
     {
       if(players[i].frame == 0) {
         // dma_start_channel_mask(1u << whooshctrl_chan) ;
+        trigger_dma_effect(whoosh_sound, whoosh_sound_length);
       }
       players[i].frame++;
       if (players[i].frame > 1)
@@ -722,6 +751,7 @@ void game_step()
           if (players[!i].shield > 0 && players[!i].state == 5)
           {
             // dma_start_channel_mask(1u << shieldctrl_chan);
+            trigger_dma_effect(shield_sound, shield_sound_length);
 
             players[!i].shield--;
             if (players[i].shield < 3)
@@ -735,6 +765,7 @@ void game_step()
           else
           {
             // dma_start_channel_mask(1u << hitctrl_chan);
+            trigger_dma_effect(hit_sound, hit_sound_length);
 
             players[!i].frame = 0;
             players[!i].state = 4; // hurt state
@@ -918,6 +949,7 @@ void ui_state_machine()
       drawSprite(rooftop, 741, false, 322, 480, BLACK);
       drawSprite(rooftop, 741, true, 318, 480, BLACK);
       // dma_start_channel_mask(1u << fightctrl_chan) ;
+      trigger_dma_effect(fight_sound, fight_sound_length);
     }
     else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
     {
@@ -963,6 +995,7 @@ void ui_state_machine()
       drawSprite(rooftop, 741, false, 322, 480, BLACK);
       drawSprite(rooftop, 741, true, 318, 480, BLACK);
       // dma_start_channel_mask(1u << fightctrl_chan) ;
+      trigger_dma_effect(fight_sound, fight_sound_length);
     }
     else if(p1_key==0 && p2_key==0) // go back to title screen (and reset game) if both players are pressing ESC (key 0)
     {

@@ -5,9 +5,9 @@ PORT = 4760
 all: build
 
 build:
-	emcc $(SRC) -o $(TARGET).js \
+	emcc animation.c -o game.js \
 		-sEXPORTED_FUNCTIONS=_main,_ui_state_machine \
-		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap \
+		-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPU32 \
 		-sALLOW_MEMORY_GROWTH=1 \
 		-sASYNCIFY
 

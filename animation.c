@@ -49,6 +49,15 @@ short getKey(bool p1)
   return get_key_js(p1);
 }
 
+EM_JS(void, trigger_effect, (unsigned int *freq, short len), {
+  const freqs = [];
+  for (let i = 0; i < len; i++)
+  {
+    freqs.push(Module.HEAPU32[(freq >> 2) + i]);
+  }
+  triggerEffect(freqs);
+});
+
 //=== ===
 // Define constants
 #define SCREEN_WIDTH 640
@@ -80,14 +89,6 @@ short p1_key_prev = -1;
 short p2_key_prev = -1;
 
 // short hit_x=-1, hit_y=-1, hit_w=0, hit_h=0; //for drawing attack hitboxes
-
-static void trigger_effect(unsigned int *freq, short len)
-{
-  effect_freq = freq;
-  effect_len = len;
-  count_1 = 0;
-  effect_id = 0;
-}
 
 static uint32_t last_update_time = 0;
 static uint32_t elapsed_time_sec = 0;
@@ -443,7 +444,6 @@ void handle_input(short i)
   }
   case 3: // upward punch
   {
-    // trigger_effect(placeholder_freq,4);
     players[i].frame = 0;
     players[i].state = 10;
     break;
@@ -551,7 +551,6 @@ void game_step()
       // check if attack active
       if (players[i].frame == active_frames[players[i].state])
       {
-        // trigger_effect(placeholder_freq,4);
         if (isOverlapping(1, players[!i].body, i))
         {
           // check back block

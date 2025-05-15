@@ -106,6 +106,58 @@
     }
   }
 
+
+    let themeFreq = [587, 587, 622, 622, 440, 440, 0, 0, 175, 587, 247, 622, 440, 0, 0, 932, 1109, 1109, 622, 622, 440, 440, 0, 0, 1109, 587, 622, 247, 220, 0, 0, 294];
+    let themeIndex = 0;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentOsc = null;
+
+    function playThemeNote() {
+      const t0 = audioCtx.currentTime;
+      if (currentOsc) currentOsc.stop();
+
+      let bgmFreq = themeFreq[themeIndex];
+      themeIndex = (themeIndex + 1) % themeFreq.length;
+
+      let freq = bgmFreq;
+
+      if (effectFreq && effectIndex < effectFreq.length) {
+        freq = effectFreq[effectIndex++];
+      } else {
+        effectFreq = null;
+        effectIndex = 0;
+      }
+
+      if (freq > 0) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t0);
+
+        gain.gain.setValueAtTime(0.2, t0);
+        gain.gain.setValueAtTime(0.2, t0 + 0.120);
+        gain.gain.linearRampToValueAtTime(0.0, t0 + 0.130);
+
+        osc.start(t0);
+        osc.stop(t0 + 0.130);
+
+        currentOsc = osc;
+      }
+    }
+
+
+    setInterval(playThemeNote, 130); // 130 ms per note... wanted 125ms but messed up conversion in pico and want to mimic pico behaviors... anyway 130ms is close enough.
+    
+    let effectFreq = null;
+    let effectIndex = 0;
+
+    function triggerEffect(freqArray) {
+      effectFreq = freqArray;
+      effectIndex = 0;
+    }
+
 </script>
 <script src="game.js"></script>
 

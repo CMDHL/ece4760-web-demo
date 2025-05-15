@@ -449,7 +449,7 @@ function updateMemoryViews() {
   HEAPU8 = new Uint8Array(b);
   HEAPU16 = new Uint16Array(b);
   HEAP32 = new Int32Array(b);
-  HEAPU32 = new Uint32Array(b);
+  Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
   HEAPF32 = new Float32Array(b);
   HEAPF64 = new Float64Array(b);
   HEAP64 = new BigInt64Array(b);
@@ -1890,7 +1890,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'HEAP16',
   'HEAPU16',
   'HEAP32',
-  'HEAPU32',
   'HEAP64',
   'HEAPU64',
   'writeStackCookie',
@@ -2121,6 +2120,7 @@ function checkIncomingModuleAPI() {
 function fill_rect(x,y,w,h,color) { Module.fillRect(x, y, w, h, color); }
 function draw_rect(x,y,w,h,color) { Module.drawRect(x, y, w, h, color); }
 function get_key_js(p1) { const held = p1 ? Module.keyState.p1Held : Module.keyState.p2Held; for (let i = 0; i < Module.keypadPriority.length; i++) { const code = Module.keypadPriority[i]; if (held.has(code)) return code; } return -1; }
+function trigger_effect(freq,len) { const freqs = []; for (let i = 0; i < len; i++) { freqs.push(Module.HEAPU32[(freq >> 2) + i]); } triggerEffect(freqs); }
 var wasmImports = {
   /** @export */
   _abort_js: __abort_js,
@@ -2135,7 +2135,9 @@ var wasmImports = {
   /** @export */
   fill_rect,
   /** @export */
-  get_key_js
+  get_key_js,
+  /** @export */
+  trigger_effect
 };
 var wasmExports;
 createWasm();

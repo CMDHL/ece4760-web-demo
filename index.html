@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pico Web Game</title>
+  <style>
+    html, body {
+      background: black;
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="640" height="480"></canvas>
+  <script src="game.js"></script>
+  <script>
+    // Emscripten will use this canvas
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      fillRect: function(x, y, w, h, color) {
+        const ctx = Module.canvas.getContext('2d');
+        ctx.fillStyle = getColor(color);
+        ctx.fillRect(x, Module.canvas.height - y - h, w, h); // flip y-axis
+      },
+      drawRect: function(x, y, w, h, color) {
+        const ctx = Module.canvas.getContext('2d');
+        ctx.strokeStyle = getColor(color);
+        ctx.strokeRect(x, Module.canvas.height - y - h, w, h);
+      }
+    };
+
+    function getColor(c) {
+      switch(c) {
+        case 'b': return '#000'; // black
+        case 'w': return '#fff'; // white
+        case 'r': return '#f44'; // red
+        case 'y': return '#ff0'; // yellow
+        default:  return '#0ff'; // fallback
+      }
+    }
+  </script>
+</body>
+</html>

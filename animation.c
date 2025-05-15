@@ -278,34 +278,6 @@ void drawTitleScreen(bool ready)
   short outline_off = 68;
   for(short i=0;i<2;i++)
   {
-    if(players[i].head_anim==A)
-    {
-      if(winner<0)
-        drawSprite(title_A_full, 2871, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      else if(winner!=i)
-        drawSprite(title_A_lose, 1969, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      else
-        drawSprite(title_A_win, 2807, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      drawSprite(title_A, 74, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
-      drawSprite(A_Idle_0, 119, i==1,i==0?outline_off:SCREEN_WIDTH-outline_off, SCREEN_HEIGHT, BLACK);
-    }
-    else if (players[i].head_anim==E)
-    {
-      if(winner<0)
-        drawSprite(title_E_full, 2070, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      else if(winner!=i)
-        drawSprite(title_E_lose, 1597, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      else
-        drawSprite(title_E_win, 3156, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      drawSprite(title_E, 70, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
-      drawSprite(E_Idle_0, 72, i==1, i==0?outline_off:SCREEN_WIDTH-outline_off, SCREEN_HEIGHT, BLACK);
-    }
-    else
-    {
-      drawSprite(title_Z_full, 2439, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT+8, WHITE);
-      drawSprite(title_Z, 91, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
-      drawSprite(Z_Idle_0, 97, i==1, i==0?outline_off:SCREEN_WIDTH-outline_off, SCREEN_HEIGHT, BLACK);
-    }
     if(players[i].body_anim==C1)
     {
       drawSprite(title_c1, 446, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
@@ -321,7 +293,34 @@ void drawTitleScreen(bool ready)
       drawSprite(title_c3, 421, i==1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
       drawSprite(C3_Idle_0, 134, i==1, i==0 ? outline_off:SCREEN_WIDTH-outline_off, SCREEN_HEIGHT, BLACK);
     }
-      
+    if (players[i].head_anim == A)
+    {
+      if (winner < 0)
+        drawSprite(title_A_full, 2871, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      else if (winner != i)
+        drawSprite(title_A_lose, 1969, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      else
+        drawSprite(title_A_win, 2807, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      drawSprite(title_A, 74, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
+      drawSprite(A_Idle_0, 119, i == 1, i == 0 ? outline_off : SCREEN_WIDTH - outline_off, SCREEN_HEIGHT, BLACK);
+    }
+    else if (players[i].head_anim == E)
+    {
+      if (winner < 0)
+        drawSprite(title_E_full, 2070, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      else if (winner != i)
+        drawSprite(title_E_lose, 1597, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      else
+        drawSprite(title_E_win, 3156, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      drawSprite(title_E, 70, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
+      drawSprite(E_Idle_0, 72, i == 1, i == 0 ? outline_off : SCREEN_WIDTH - outline_off, SCREEN_HEIGHT, BLACK);
+    }
+    else
+    {
+      drawSprite(title_Z_full, 2439, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT + 8, WHITE);
+      drawSprite(title_Z, 91, i == 1, SCREEN_MIDLINE_X, SCREEN_HEIGHT, WHITE);
+      drawSprite(Z_Idle_0, 97, i == 1, i == 0 ? outline_off : SCREEN_WIDTH - outline_off, SCREEN_HEIGHT, BLACK);
+    }
   }
   if(ready)
   {

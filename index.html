@@ -28,6 +28,11 @@
       max-width: 100vw;
     }
 
+    canvas.pointer {
+      cursor: pointer;
+    }
+
+
   </style>  
 </head>
 <body>
@@ -161,11 +166,27 @@
       effectIndex = 0;
     }
     
-    document.addEventListener('click', () => {
+    function updateCursorState() {
+        const canvas = document.getElementById('canvas');
+        if (!document.fullscreenElement) {
+          canvas.classList.add('pointer');
+        } else {
+          canvas.classList.remove('pointer');
+        }
+      }
+
+      document.addEventListener('click', () => {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen().catch(() => { });
         }
       });
+
+      // Listen for fullscreen changes
+      document.addEventListener('fullscreenchange', updateCursorState);
+
+      // Also check at startup
+      updateCursorState();
+
 
 </script>
 <script src="game.js"></script>

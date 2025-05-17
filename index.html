@@ -47,22 +47,23 @@
       <canvas id="canvas" width="640" height="480" style="display: block;"></canvas>
       <div id="floatingText" style="
         position: absolute;
-        top: 0;
         left: 0;
-        width: 50%;
+        top: 0;
         background: rgba(0, 0, 0, 0.7);
         color: white;
-        font-size: clamp(1.5rem, 3vw, 2.5rem);
+        font-size: clamp(36px, 5vw, 64px);
         font-weight: bold;
-        padding: 12px 0;
-        border-radius: 8px;
+        padding: 20px 40px;
+        border-radius: 16px;
         text-align: center;
         white-space: nowrap;
         pointer-events: none;
         z-index: 5;
+        transition: left 1s ease-in-out, top 1s ease-in-out;
       ">
-        Please Click Me!
+        Click Me!
       </div>
+
     </div>
   </div>
   
@@ -245,6 +246,7 @@
       const container = document.getElementById('canvas');
 
       function randomPosition() {
+        const container = document.getElementById('canvas');
         const maxX = container.clientWidth - floating.offsetWidth;
         const maxY = container.clientHeight - floating.offsetHeight;
         return {
@@ -255,12 +257,13 @@
 
       function moveText() {
         const { x, y } = randomPosition();
-        floating.style.transition = 'transform 1s ease-in-out';
-        floating.style.transform = `translate(${x}px, ${y}px)`;
-        setTimeout(moveText, 1000);
+        floating.style.left = `${x}px`;
+        floating.style.top = `${y}px`;
+        setTimeout(moveText, 1000); // repeat every 1 second, matching the transition
       }
 
       moveText();
+
 
       // Optional: hide after click
       container.addEventListener('click', () => {

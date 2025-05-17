@@ -160,6 +160,12 @@
       effectFreq = freqArray;
       effectIndex = 0;
     }
+    
+    document.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => { });
+        }
+      });
 
 </script>
 <script src="game.js"></script>

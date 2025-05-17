@@ -22,9 +22,12 @@
     canvas {
       background: black;
       image-rendering: pixelated;
-      width: 640px;
-      height: 480px;
+      width: auto;
+      height: 100vh;
+      aspect-ratio: 4 / 3;
+      max-width: 100vw;
     }
+
   </style>  
 </head>
 <body>
@@ -101,7 +104,7 @@
       case 0: return '#000'; // black
       case 1: return '#fff'; // white
       case 2: return '#f44'; // red
-      case 3: return '#ff0'; // yellow
+      case 3: return '#44f'; // blue
       default: return '#0ff'; // fallback (cyan)
     }
   }

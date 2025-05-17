@@ -103,10 +103,11 @@ short effect_len = 1;
 short effect_id = -1;
 short count_1 = 0;
 
+short hit_x=-1, hit_y=-1, hit_w=0, hit_h=0; //for drawing attack hitboxes
+bool hit_new=false; //each hit should only be drawn for one frame
+
 short p1_key_prev = -1;
 short p2_key_prev = -1;
-
-// short hit_x=-1, hit_y=-1, hit_w=0, hit_h=0; //for drawing attack hitboxes
 
 static uint32_t last_update_time = 0;
 static uint32_t elapsed_time_sec = 0;
@@ -116,7 +117,7 @@ static short tracked_key;
 #define BLACK 0
 #define WHITE 1
 #define RED   2
-#define YELLOW 3
+#define BLUE  3
 
 
 // Possible Player States: 0 = Idle, 1 = Attack, 2 = Hurt, 3 = Die
@@ -354,6 +355,40 @@ void drawPauseScreen()
   drawSprite(key_in, 140, true,SCREEN_MIDLINE_X,SCREEN_HEIGHT,WHITE);
 }
 
+void drawBodyHitbox(short h, short p, char color)
+{
+  short h1xL = players[p].x - hitboxes[h].x_off;
+  short h1xR = players[p].x + hitboxes[h].x_off - hitboxes[h].w;
+
+  short h1y1 = players[p].y - hitboxes[h].y_off;
+  short h1y2 = h1y1 + hitboxes[h].h;
+
+  short h1x1;
+  short h1x2;
+
+  if (!players[p].flip)
+  {
+    h1x1 = h1xL;
+    h1x2 = h1xL + hitboxes[h].w;
+  }
+  else
+  {
+    h1x1 = h1xR;
+    h1x2 = h1xR + hitboxes[h].w;
+  }
+
+  if(color==WHITE) //somehow web version doesn't erase well with drawRect...
+  {
+    fillRect(h1x1-1, h1y1-1, h1x2 - h1x1+2, h1y2 - h1y1+2, color);
+  }
+  {
+    drawRect(h1x1, h1y1, h1x2 - h1x1, h1y2 - h1y1, color);
+    drawRect(h1x1 + 1, h1y1 + 1, h1x2 - h1x1 - 2, h1y2 - h1y1 - 2, color);
+    drawRect(h1x1 + 2, h1y1 + 2, h1x2 - h1x1 - 4, h1y2 - h1y1 - 4, color);
+  }
+  
+}
+
 bool isOverlapping(short h1, short h2, short attacker)
 {
   if (h1 < 0 || h2 < 0)
@@ -402,6 +437,15 @@ bool isOverlapping(short h1, short h2, short attacker)
   bool x_overlap = (h1x1 >= h2x1 && h1x1 <= h2x2) || (h1x2 >= h2x1 && h1x2 <= h2x2) || (h2x1 >= h1x1 && h2x1 <= h1x2) || (h2x2 >= h1x1 && h2x2 <= h1x2);
   bool y_overlap = (h1y1 >= h2y1 && h1y1 <= h2y2) || (h1y2 >= h2y1 && h1y2 <= h2y2) || (h2y1 >= h1y1 && h2y1 <= h1y2) || (h2y2 >= h1y1 && h2y2 <= h1y2);
   bool r = x_overlap && y_overlap;
+
+  if (r && h1 != 0 && h1 != 5)
+  {
+    hit_x = h1x1;
+    hit_y = h1y1;
+    hit_w = h1x2 - h1x1;
+    hit_h = h1y2 - h1y1;
+    hit_new=true;
+  }
 
   return r;
 }
@@ -501,6 +545,19 @@ void handle_input(short i)
 
 void game_step()
 {
+  // erase
+  // drawBodyHitbox(players[0].body, 0, WHITE);                   
+  // drawBodyHitbox(players[1].body, 1, WHITE);                   
+  // fillRect(hit_x-4, hit_y-4, hit_w+8, hit_h+8, WHITE);
+  if(hit_new)
+  {
+    hit_new=false;
+    hit_x=-1;
+    hit_y=-1;
+    hit_w=0;
+    hit_h=0;
+  }
+
   drawHealthBars(BLACK);
   drawShields(BLACK);
   // drawRect(80, 0 ,640-160, 480, BLACK);
@@ -822,6 +879,12 @@ void game_step()
 
   drawFrame(&players[0], BLACK); // player i, draw current frame
   drawFrame(&players[1], BLACK); // player i, draw current frame
+
+  // drawBodyHitbox(players[0].body, 0, BLUE); // draw body hitbox
+  // drawBodyHitbox(players[1].body, 1, BLUE);
+  // drawRect(hit_x, hit_y, hit_w, hit_h, RED); //draw attack hitbox
+  // drawRect(hit_x - 1, hit_y - 1, hit_w + 2, hit_h + 2, RED); // make it thicker
+  // drawRect(hit_x-2, hit_y-2, hit_w+4, hit_h+4, RED);
 
   drawSprite(P1, 13, false, players[0].x, players[0].y, BLACK);
   drawSprite(P2, 15, false, players[1].x, players[1].y, BLACK);

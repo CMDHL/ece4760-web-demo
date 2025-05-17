@@ -197,9 +197,19 @@
       updateCursorState();
 
       window.addEventListener('blur', () => {
-          keyState.p1Held.clear();
-          keyState.p2Held.clear();
+        keyState.p1Held.clear();
+        keyState.p2Held.clear();
+      });
+    
+      document.addEventListener('mousedown', () => {
+          keyState.p1Held.add(10);
+          keyState.p2Held.add(10);
         });
+
+      document.addEventListener('mouseup', () => {
+        keyState.p1Held.delete(10);
+        keyState.p2Held.delete(10);
+      });
 
 
 </script>

@@ -72,14 +72,23 @@
 
     document.addEventListener('keydown', (event) => {
         if (event.repeat) return;
-        if (keyMapP1.hasOwnProperty(event.keyCode)) keyState.p1Held.add(keyMapP1[event.keyCode]);
-        if (keyMapP2.hasOwnProperty(event.keyCode)) keyState.p2Held.add(keyMapP2[event.keyCode]);
+        if (event.keyCode in keyMapP1)
+          keyState.p1Held.add(keyMapP1[event.keyCode]);
+        else if (event.keyCode in keyMapP2)
+          keyState.p2Held.add(keyMapP2[event.keyCode]);
+        else
+        { keyState.p1Held.add(10); keyState.p2Held.add(10); }
       });
 
       document.addEventListener('keyup', (event) => {
-        if (keyMapP1.hasOwnProperty(event.keyCode)) keyState.p1Held.delete(keyMapP1[event.keyCode]);
-        if (keyMapP2.hasOwnProperty(event.keyCode)) keyState.p2Held.delete(keyMapP2[event.keyCode]);
-      });
+          if (event.keyCode in keyMapP1)
+            keyState.p1Held.delete(keyMapP1[event.keyCode]);
+          else if (event.keyCode in keyMapP2)
+            keyState.p2Held.delete(keyMapP2[event.keyCode]);
+          else
+          { keyState.p1Held.delete(10); keyState.p2Held.delete(10); }
+        });
+
 
   var Module = {
     canvas: document.getElementById('canvas'),
@@ -186,6 +195,11 @@
 
       // Also check at startup
       updateCursorState();
+
+      window.addEventListener('blur', () => {
+          keyState.p1Held.clear();
+          keyState.p2Held.clear();
+        });
 
 
 </script>

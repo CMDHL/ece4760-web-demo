@@ -1,4 +1,5 @@
 # ECE4760 Web Demo
+- 👉 [Click here to play the game on GitHub Pages](https://cmdhl.github.io/ece4760-web-demo/)
 - A computer version of our ECE4760 final project on pico, by Albert Sun (ays48), Edwin Dake(ed433), and Zoey Mo (zm73).
 - The conversion from our [pico project](https://github.com/asun121/ece4760-final-project) to this web version is done by ChatGPT. 
 - In our pico project, we used ECE4760's starter code from [Hunter-Adams-RP2040-Demos](https://github.com/vha3/Hunter-Adams-RP2040-Demos)

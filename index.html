@@ -36,7 +36,37 @@
   </style>  
 </head>
 <body>
-  <canvas id="canvas" width="640" height="480"></canvas>
+  <div id="canvasContainer" style="
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  ">
+    <div style="position: relative;">
+      <canvas id="canvas" width="640" height="480" style="display: block;"></canvas>
+      <div id="floatingText" style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+        font-weight: bold;
+        padding: 12px 0;
+        border-radius: 8px;
+        text-align: center;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 5;
+      ">
+        Please Click Me!
+      </div>
+    </div>
+  </div>
+  
+
 <script>
   const keyMapP1 = {
       65: 4,  // A = LEFT
@@ -211,6 +241,31 @@
         keyState.p2Held.delete(10);
       });
 
+      const floating = document.getElementById('floatingText');
+      const container = document.getElementById('canvas');
+
+      function randomPosition() {
+        const maxX = container.clientWidth - floating.offsetWidth;
+        const maxY = container.clientHeight - floating.offsetHeight;
+        return {
+          x: Math.random() * maxX,
+          y: Math.random() * maxY
+        };
+      }
+
+      function moveText() {
+        const { x, y } = randomPosition();
+        floating.style.transition = 'transform 1s ease-in-out';
+        floating.style.transform = `translate(${x}px, ${y}px)`;
+        setTimeout(moveText, 1000);
+      }
+
+      moveText();
+
+      // Optional: hide after click
+      container.addEventListener('click', () => {
+        floating.style.display = 'none';
+      });
 
 </script>
 <script src="game.js"></script>
